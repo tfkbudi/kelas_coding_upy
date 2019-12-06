@@ -17,6 +17,12 @@ interface TemanDao {
     @Query("SELECT * FROM Teman")
     fun ambilSemuaTeman(): List<Teman>
 
+    @Query("SELECT * FROM Teman WHERE temanId= :temanId")
+    fun ambilTemanBerdasarId(temanId: Int): Teman
+
+    @Update
+    fun updateTeman(teman: Teman)
+
     @Delete
     fun hapusTeman(teman: Teman)
 }

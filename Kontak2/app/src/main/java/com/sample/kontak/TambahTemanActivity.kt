@@ -5,8 +5,8 @@ import android.os.Bundle
 import com.sample.kontak.db.AppDatabase
 import com.sample.kontak.db.TemanDao
 import kotlinx.android.synthetic.main.activity_tambah_teman.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 class TambahTemanActivity : AppCompatActivity() {
@@ -15,6 +15,8 @@ class TambahTemanActivity : AppCompatActivity() {
     private var db: AppDatabase? = null
     private var dao: TemanDao? = null
 
+    private var temanId: Int? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_tambah_teman)
@@ -22,6 +24,15 @@ class TambahTemanActivity : AppCompatActivity() {
         //tambah ini
         initDb()
         btnSimpan.setOnClickListener { validate() }
+
+        //ambil data temanId dr intent
+        val temanId = intent.getIntExtra("temanId", 0)
+        //jika 0 berarti tidak ada temanId yg dikrim dr activity sblmnya
+        if (temanId != 0) {
+            this.temanId = temanId
+            getTemanById()
+        }
+
     }
 
     //tambah sampai bawah
@@ -40,32 +51,59 @@ class TambahTemanActivity : AppCompatActivity() {
         val telp = etTelp.text.toString()
 
         //check kalo ada yang belum diisi, tampilkan error
-        if (email.isNullOrEmpty()) {
+        if (email.isEmpty()) {
             etEmail.error = "required"
             return
         }
 
-        if (name.isNullOrEmpty()) {
+        if (name.isEmpty()) {
             etName.error = "required"
             return
         }
 
-        if (telp.isNullOrEmpty()) {
+        if (telp.isEmpty()) {
             etTelp.error = "required"
             return
         }
         //membuat objek teman
-        val teman = Teman(null, name, email, telp)
+        val teman = Teman(temanId, name, email, telp)
         //jalankan fungsi utk menyimpan keDB
         saveToDb(teman)
     }
 
-    private fun saveToDb(teman: Teman): Job {
+    private fun saveToDb(teman: Teman) {
         //penyimpanan data harus dilakukan di background thread
         //disini pakai coroutine utk background threadnya
-        return GlobalScope.launch {
-            dao?.tambahTeman(teman)
+        GlobalScope.launch {
+            //jika temanId = null, berarti data baru
+            if (teman.temanId == null) {
+                dao?.tambahTeman(teman)
+            } else {
+                dao?.updateTeman(teman)
+            }
+
             this@TambahTemanActivity.finish()
+        }
+    }
+
+    //ambil data teman berdasarkan id
+    private fun getTemanById() {
+        temanId?.let {
+            GlobalScope.launch {
+                val teman = dao?.ambilTemanBerdasarId(it)
+                GlobalScope.launch(Dispatchers.Main) {
+                    updateUi(teman)
+                }
+            }
+        }
+    }
+
+    //update ui berdasarkan data teman
+    private fun updateUi(teman: Teman?) {
+        teman?.let {
+            etEmail.setText(it.email)
+            etName.setText(it.nama)
+            etTelp.setText(it.telp)
         }
     }
 }

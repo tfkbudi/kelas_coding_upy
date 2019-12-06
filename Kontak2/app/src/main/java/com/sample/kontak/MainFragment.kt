@@ -42,12 +42,13 @@ class MainFragment : Fragment() {
         initDb()
         initRecyclerView()
 
-        //tambah ini
-        fabAdd.setOnClickListener { toAddFried() }
+        //event klik floating action button
+        fabAdd.setOnClickListener { toAddFriend() }
 
     }
-    //tambah ini
-    private fun toAddFried() {
+
+    //kehalaman tambah teman
+    private fun toAddFriend() {
         val i = Intent(context, TambahTemanActivity::class.java)
         startActivity(i)
     }
@@ -57,6 +58,7 @@ class MainFragment : Fragment() {
         getTeman()
     }
 
+    //inisiasi db
     private fun initDb() {
         db = AppDatabase.getAppDataBase(context!!)
         dao = db?.temanDao()
@@ -95,6 +97,7 @@ class MainFragment : Fragment() {
 
     }
 
+    //update user interface
     private fun updateUi(list: List<Teman>?) {
         if (!list.isNullOrEmpty()) {
 
@@ -107,17 +110,11 @@ class MainFragment : Fragment() {
         }
     }
 
-    //digunakan untuk sample data..nanti data bisa berasal dr rest API atau database
-    private fun dummyData() {
-        listData.add(Teman(null, "Winda", "Winda@mail.com", "1234"))
-        listData.add(Teman(null, "Budi", "budi@mail.com", "123123"))
-        listData.add(Teman(null, "Joko", "koko@mail.com", "1234234"))
-    }
-
-
 
     private fun toDetailFriend(item: Teman) {
         val i = Intent(context, TambahTemanActivity::class.java)
+        i.putExtra("isEdit", true)
+        i.putExtra("temanId", item.temanId)
         startActivity(i)
     }
 
